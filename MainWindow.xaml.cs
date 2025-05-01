@@ -11,7 +11,7 @@ namespace CITest
 
             string json = JsonConvert.SerializeObject(new
             {
-                name = "Test1",
+                name = "Test2",
             });
             MessageBox.Show(json);
         }
