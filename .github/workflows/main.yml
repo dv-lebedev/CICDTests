@@ -33,7 +33,7 @@ jobs:
         with:
           releaseType: ${{ steps.versioningTag.outputs.releaseType }}
           incrementPerCommit: false
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GH_TOKEN }}
 
       - name: conditional output
         id: branchTag
