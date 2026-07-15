@@ -13,7 +13,7 @@ jobs:
   tagging:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Next Release Number
         run: echo ${{ steps.branchTag.outputs.releaseType }}
