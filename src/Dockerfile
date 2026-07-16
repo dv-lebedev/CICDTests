@@ -15,9 +15,9 @@ RUN dotnet publish "MockService.csproj" -c Release -o /app/publish /p:UseAppHost
 FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_URLS=http://+:80
 
-EXPOSE 5000
+EXPOSE 80
 
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "MockService.dll"]
