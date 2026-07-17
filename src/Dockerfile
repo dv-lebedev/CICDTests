@@ -13,6 +13,7 @@ FROM build AS publish
 RUN dotnet publish "MockService.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM --platform=$TARGETPLATFORM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+RUN apt-get update && apt-get install -y curl
 WORKDIR /app
 
 ENV ASPNETCORE_URLS=http://+:80
