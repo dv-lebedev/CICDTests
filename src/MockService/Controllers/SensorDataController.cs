@@ -25,6 +25,12 @@ namespace MockService.Controllers
             return Ok(sensorData);
         }
 
+        [HttpGet("foo")]
+        public ActionResult Get()
+        {
+            return Content("foo");
+        }
+
         [HttpGet("oldest")]
         public SensorData? GetOldest()
         {
