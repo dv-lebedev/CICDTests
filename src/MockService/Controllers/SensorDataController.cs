@@ -9,6 +9,8 @@ namespace MockService.Controllers
     {
         private readonly ISensorDataRepository _sensorDataRepository;
 
+        private static int counter = 0;
+
         public SensorDataController(ISensorDataRepository sensorDataRepository)
         {
             _sensorDataRepository = sensorDataRepository;
@@ -25,10 +27,11 @@ namespace MockService.Controllers
             return Ok(sensorData);
         }
 
-        [HttpGet("foo")]
-        public ActionResult Get()
+        [HttpGet("counter")]
+        public ActionResult Counter()
         {
-            return Content("foo");
+            counter++;
+            return Content(counter.ToString());
         }
 
         [HttpGet("oldest")]
