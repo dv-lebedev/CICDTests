@@ -37,6 +37,18 @@ namespace MockService.Controllers
             return _sensorDataRepository.GetAll();
         }
 
+        [HttpGet("ping")]
+        public IActionResult Ping()
+        {
+            _sensorDataRepository.Save(new SensorData
+            {
+                SensorId = Guid.NewGuid(),
+                Timestamp = DateTime.UtcNow,
+                Data = DateTime.UtcNow.Ticks,
+            });
+            return Ok();
+        }
+
         [HttpPost]
         public IActionResult Post([FromBody] SensorData sensorData)
         {
