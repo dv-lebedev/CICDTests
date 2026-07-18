@@ -42,13 +42,13 @@ jobs:
              echo "currentTag=${{ steps.versioning.outputs.version }}" >> $GITHUB_OUTPUT
              echo "currentStack=dev" >> $GITHUB_OUTPUT
              echo "releaseType=patch" >> $GITHUB_OUTPUT
-             echo "clusterName=seamless" >> $GITHUB_OUTPUT
+             echo "clusterName=mock-service-dev" >> $GITHUB_OUTPUT
              echo "Dev branch"
           else
              echo "currentTag=${{ steps.versioning.outputs.version }}" >> $GITHUB_OUTPUT
              echo "currentStack=prod" >> $GITHUB_OUTPUT
              echo "releaseType=minor" >> $GITHUB_OUTPUT
-             echo "clusterName=mock-service-prod" >> $GITHUB_OUTPUT
+             echo "clusterName=mock-service" >> $GITHUB_OUTPUT
              echo "Prod branch"
           fi
 
@@ -121,3 +121,21 @@ jobs:
             BUILDPLATFORM=${{ matrix.platform }}
             ASPNETCORE_ENVIRONMENT=${{ env.ASPNETCORE_ENVIRONMENT }}
             BUILDKIT_PROGRESS=plain
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Update kubeconfig
+        run: |
+          if [ "${{ needs.tagging.outputs.stack }}" == "dev" ]; then
+            aws eks update-kubeconfig --name mock-service-dev --region us-east-1
+          else
+            aws eks update-kubeconfig --name mock-service-prod --region us-east-1
+          fi
+
+      - name: Deploy new image to EKS
+        run: |
+          kubectl set image deployment/mock-service \
+            mock-service=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ needs.tagging.outputs.tag }} -n default
