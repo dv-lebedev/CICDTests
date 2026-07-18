@@ -49,6 +49,12 @@ namespace MockService.Controllers
             return Ok();
         }
 
+        [HttpGet("check")]
+        public IActionResult Check()
+        {
+            return Content("<h1>KUS-KUS!!!</h1>", "text/html");
+        }
+
         [HttpPost]
         public IActionResult Post([FromBody] SensorData sensorData)
         {
