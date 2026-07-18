@@ -132,7 +132,7 @@ jobs:
           if [ "${{ needs.tagging.outputs.stack }}" == "dev" ]; then
             aws eks update-kubeconfig --name mock-service-dev --region us-east-1
           else
-            aws eks update-kubeconfig --name mock-service-prod --region us-east-1
+            aws eks update-kubeconfig --name mock-service --region us-east-1
           fi
 
       - name: Deploy new image to EKS
