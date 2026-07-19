@@ -82,6 +82,8 @@ public class Program
             Predicate = check => check.Tags.Contains("live")
         });
 
+        app.MapGet("/", () => Results.Ok());
+
         app.Run();
     }
 
