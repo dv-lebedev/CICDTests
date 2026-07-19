@@ -11,7 +11,6 @@ public interface ISensorDataRepository
 public class SensorDataRepository : ISensorDataRepository
 {
     private const int MaxQueueSize = 10;
-
     private readonly Queue<SensorData> _queue = new();
     private readonly object _sync = new();
 

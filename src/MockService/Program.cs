@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
 using MockService.Data;
 using Serilog;
@@ -24,17 +25,20 @@ public class Program
         finally
         {
             Log.CloseAndFlush();
-        }     
+        }
     }
 
     private static void BuildAndRunWebApplication(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // Add services to the container.
         builder.Services.AddControllers();
 
         builder.Services.AddSingleton<ISensorDataRepository, SensorDataRepository>();
+
+        builder.Services.AddHealthChecks()
+            .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" });
+
         builder.Services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "MockService", Version = "v1" });
@@ -45,10 +49,17 @@ public class Program
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockService v1"));
 
-        // Configure the HTTP request pipeline.
         app.UseHttpsRedirection();
         app.UseAuthorization();
+
         app.MapControllers();
+
+        app.MapHealthChecks("/health");
+        app.MapHealthChecks("/health/live", new()
+        {
+            Predicate = check => check.Tags.Contains("live")
+        });
+
         app.Run();
     }
 
