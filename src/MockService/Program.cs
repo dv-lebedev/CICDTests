@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.OpenApi;
 using MockService.Data;
@@ -33,6 +35,7 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         builder.Services.AddControllers();
+        builder.Services.AddProblemDetails();
 
         builder.Services.AddSingleton<ISensorDataRepository, SensorDataRepository>();
 
@@ -46,6 +49,26 @@ public class Program
 
         var app = builder.Build();
 
+        app.UseExceptionHandler(exceptionHandlerApp =>
+        {
+            exceptionHandlerApp.Run(async context =>
+            {
+                var exceptionFeature = context.Features.Get<IExceptionHandlerFeature>();
+                var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+                if (exceptionFeature?.Error is not null)
+                {
+                    logger.LogError(exceptionFeature.Error, "Unhandled request exception");
+                }
+
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await Results.Problem(
+                    title: "An unexpected error occurred.",
+                    statusCode: StatusCodes.Status500InternalServerError)
+                    .ExecuteAsync(context);
+            });
+        });
+
         app.UseSwagger();
         app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "MockService v1"));
 
@@ -53,7 +76,6 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
-
         app.MapHealthChecks("/health");
         app.MapHealthChecks("/health/live", new()
         {

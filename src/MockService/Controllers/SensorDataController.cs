@@ -9,58 +9,60 @@ namespace MockService.Controllers
     {
         private readonly ISensorDataRepository _sensorDataRepository;
 
-        private static int counter = 0;
-
         public SensorDataController(ISensorDataRepository sensorDataRepository)
         {
             _sensorDataRepository = sensorDataRepository;
         }
 
-        [HttpGet]
-        public ActionResult Get(Guid guid)
+        [HttpGet("{id}")]
+        public ActionResult Get(Guid id)
         {
-            var sensorData = _sensorDataRepository.Get(guid);
-            if (sensorData == null)
+            var sensorData = _sensorDataRepository.Get(id);
+            return sensorData == null ? NotFound() : Ok(sensorData);
+        }
+
+        [HttpGet("generate-one")]
+        public ActionResult GenerateOne()
+        {
+            var sensorData = new SensorData
             {
-                return NotFound();
-            }
+                SensorId = Guid.NewGuid(),
+                Timestamp = DateTime.UtcNow,
+                Data = DateTime.UtcNow.Ticks,
+            };
+            _sensorDataRepository.Save(sensorData);
             return Ok(sensorData);
         }
 
-        [HttpGet("counter")]
-        public ActionResult Counter()
+        [HttpGet("first")]
+        public ActionResult GetFirst()
         {
-            counter++;
-            return Content(counter.ToString());
+            var first = _sensorDataRepository.GetFirst();
+            return first == null ? NotFound() : Ok(first);
         }
 
-        [HttpGet("oldest")]
-        public SensorData? GetOldest()
+        [HttpGet("last")]
+        public ActionResult GetLast()
         {
-            return _sensorDataRepository.GetLastOne();
+            var last = _sensorDataRepository.GetLast();
+            return last == null ? NotFound() : Ok(last);
         }
 
         [HttpGet("all")]
-        public IEnumerable<SensorData> GetAll()
+        public ActionResult<IEnumerable<SensorData>> GetAll()
         {
-            return _sensorDataRepository.GetAll();
-        }
-
-        [HttpGet("check")]
-        public IActionResult Check()
-        {
-            return Content("<h1>KUS-KUS!!!</h1>", "text/html");
+            var all = _sensorDataRepository.GetAll();
+            return all == null ? NotFound() : Ok(all);
         }
 
         [HttpPost]
         public IActionResult Post([FromBody] SensorData sensorData)
         {
             if (sensorData == null)
-            {
                 return BadRequest("Sensor data is null.");
-            }
+            
              _sensorDataRepository.Save(sensorData);
-            return CreatedAtAction(nameof(GetOldest), sensorData);
+            return CreatedAtAction(nameof(GetLast), sensorData);
         }
     }
 }

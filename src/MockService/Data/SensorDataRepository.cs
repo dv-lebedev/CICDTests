@@ -4,8 +4,9 @@ public interface ISensorDataRepository
 {
     void Save(SensorData sensorData);
     SensorData? Get(Guid id);
-    SensorData? GetLastOne();
+    SensorData? GetLast();
     IEnumerable<SensorData> GetAll();
+    SensorData? GetFirst();
 }
 
 public class SensorDataRepository : ISensorDataRepository
@@ -40,7 +41,15 @@ public class SensorDataRepository : ISensorDataRepository
         }
     }
 
-    public SensorData? GetLastOne()
+    public SensorData? GetFirst()
+    {
+        lock (_sync)
+        {
+            return _queue.FirstOrDefault();
+        }
+    }
+
+    public SensorData? GetLast()
     {
         lock (_sync)
         {
