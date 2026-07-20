@@ -83,6 +83,16 @@ public class Program
         });
 
         app.MapGet("/", () => Results.Ok());
+        app.MapGet("/shutdown", (IHostApplicationLifetime lifetime) =>
+        {
+            _ = Task.Run(async () =>
+                {
+                    await Task.Delay(5000);
+                    lifetime.StopApplication();
+                });
+
+            return Results.Ok("Shutting down...");
+        });
 
         app.Run();
     }
