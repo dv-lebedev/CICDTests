@@ -37,7 +37,8 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddProblemDetails();
 
-        builder.Services.AddSingleton<ISensorDataRepository, SensorDataRepository>();
+        builder.Services.AddSingleton<SensorDataContext>();
+        builder.Services.AddTransient<ISensorDataRepository, SensorDataRepository>();
 
         builder.Services.AddHealthChecks()
             .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live" });

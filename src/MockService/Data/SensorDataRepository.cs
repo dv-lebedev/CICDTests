@@ -2,42 +2,28 @@
 
 public interface ISensorDataRepository
 {
-    void Save(SensorData sensorData);
     SensorData? Get(Guid id);
+    SensorData? GetFirst();
     SensorData? GetLast();
     IEnumerable<SensorData> GetAll();
-    SensorData? GetFirst();
+    void Save(SensorData sensorData);
 }
 
 public class SensorDataRepository : ISensorDataRepository
 {
-    private const int MaxQueueSize = 10;
-    private readonly Queue<SensorData> _queue = new();
+    private readonly SensorDataContext _context;
     private readonly object _sync = new();
 
-    public SensorDataRepository() 
+    public SensorDataRepository(SensorDataContext context) 
     {
-        for (int i = 0; i < MaxQueueSize; i++)
-        {
-            var sensorData = new SensorData
-            {
-                SensorId = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow.AddMinutes(-i),
-                Data = i * 10
-            };
-            _queue.Enqueue(sensorData);
-        }
+        _context = context;
     }
 
     public void Save(SensorData sensorData)
     {
         lock (_sync)
         {
-            _queue.Enqueue(sensorData);
-            if (_queue.Count > MaxQueueSize)
-            {
-                _queue.Dequeue();
-            }
+            _context.Save(sensorData);
         }
     }
 
@@ -45,7 +31,7 @@ public class SensorDataRepository : ISensorDataRepository
     {
         lock (_sync)
         {
-            return _queue.FirstOrDefault();
+            return _context.GetFirst();
         }
     }
 
@@ -53,7 +39,7 @@ public class SensorDataRepository : ISensorDataRepository
     {
         lock (_sync)
         {
-            return _queue.LastOrDefault();
+            return _context.GetLast();
         }
     }
 
@@ -61,7 +47,7 @@ public class SensorDataRepository : ISensorDataRepository
     {
         lock (_sync)
         {
-            return _queue.ToList();
+            return _context.GetAll();
         }
     }
 
@@ -69,7 +55,7 @@ public class SensorDataRepository : ISensorDataRepository
     {
         lock (_sync)
         {
-            return _queue.FirstOrDefault(x => x.SensorId == id);
+            return _context.Get(id);
         }
     }
 }
