@@ -1,68 +1,88 @@
 using Microsoft.AspNetCore.Mvc;
 using MockService.Data;
 
-namespace MockService.Controllers
+namespace MockService.Controllers;
+
+[ApiController]
+[Route("sensor-data")]
+public class SensorDataController : ControllerBase
 {
-    [ApiController]
-    [Route("sensor-data")]
-    public class SensorDataController : ControllerBase
+    private readonly ISensorDataRepository _sensorDataRepository;
+
+    public SensorDataController(ISensorDataRepository sensorDataRepository)
     {
-        private readonly ISensorDataRepository _sensorDataRepository;
+        _sensorDataRepository = sensorDataRepository;
+    }
 
-        public SensorDataController(ISensorDataRepository sensorDataRepository)
+    [HttpGet("{id:guid}")]
+    public ActionResult<SensorData> GetById(Guid id)
+    {
+        var sensorData = _sensorDataRepository.Get(id);
+        return sensorData is null ? NotFound() : Ok(sensorData);
+    }
+
+    [HttpPost("generate-one")]
+    public ActionResult<SensorData> GenerateOne()
+    {
+        var sensorData = CreateGeneratedSensorData();
+
+        _sensorDataRepository.Save(sensorData);
+
+        return CreatedAtAction(nameof(GetById), new { id = sensorData.SensorId }, sensorData);
+    }
+
+    [HttpGet("first")]
+    public ActionResult<SensorData> GetFirst()
+    {
+        var first = _sensorDataRepository.GetFirst();
+        return first is null ? NotFound() : Ok(first);
+    }
+
+    [HttpGet("last")]
+    public ActionResult<SensorData> GetLast()
+    {
+        var last = _sensorDataRepository.GetLast();
+        return last is null ? NotFound() : Ok(last);
+    }
+
+    [HttpGet]
+    [HttpGet("all")]
+    public ActionResult<IReadOnlyCollection<SensorData>> GetAll()
+    {
+        var all = _sensorDataRepository.GetAll().ToList();
+        return Ok(all);
+    }
+
+    [HttpPost]
+    public ActionResult<SensorData> Post([FromBody] SensorData? sensorData)
+    {
+        if (sensorData is null)
         {
-            _sensorDataRepository = sensorDataRepository;
+            return BadRequest("Sensor data is null.");
         }
 
-        [HttpGet("{id}")]
-        public ActionResult Get(Guid id)
+        if (sensorData.SensorId == Guid.Empty)
         {
-            var sensorData = _sensorDataRepository.Get(id);
-            return sensorData == null ? NotFound() : Ok(sensorData);
+            sensorData.SensorId = Guid.NewGuid();
         }
 
-        [HttpGet("generate-one")]
-        public ActionResult GenerateOne()
+        if (sensorData.Timestamp == default)
         {
-            var sensorData = new SensorData
-            {
-                SensorId = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow,
-                Data = DateTime.UtcNow.Ticks,
-            };
-            _sensorDataRepository.Save(sensorData);
-            return Ok(sensorData);
+            sensorData.Timestamp = DateTimeOffset.UtcNow;
         }
 
-        [HttpGet("first")]
-        public ActionResult GetFirst()
-        {
-            var first = _sensorDataRepository.GetFirst();
-            return first == null ? NotFound() : Ok(first);
-        }
+        _sensorDataRepository.Save(sensorData);
 
-        [HttpGet("last")]
-        public ActionResult GetLast()
-        {
-            var last = _sensorDataRepository.GetLast();
-            return last == null ? NotFound() : Ok(last);
-        }
+        return CreatedAtAction(nameof(GetById), new { id = sensorData.SensorId }, sensorData);
+    }
 
-        [HttpGet("all")]
-        public ActionResult<IEnumerable<SensorData>> GetAll()
+    private static SensorData CreateGeneratedSensorData()
+    {
+        return new SensorData
         {
-            var all = _sensorDataRepository.GetAll();
-            return all == null ? NotFound() : Ok(all);
-        }
-
-        [HttpPost]
-        public IActionResult Post([FromBody] SensorData sensorData)
-        {
-            if (sensorData == null)
-                return BadRequest("Sensor data is null.");
-            
-             _sensorDataRepository.Save(sensorData);
-            return CreatedAtAction(nameof(GetLast), sensorData);
-        }
+            SensorId = Guid.NewGuid(),
+            Timestamp = DateTimeOffset.UtcNow,
+            Data = DateTime.UtcNow.Ticks
+        };
     }
 }
